@@ -118,3 +118,21 @@ plt.axis("off")
 plt.show()
 
 # wordcloud.to_file("wordcloud.png")
+
+##################################################
+# 3. Sentiment Analysis
+##################################################
+
+df['Review'].head()
+
+nltk.download('vader_lexicon')
+
+sia = SentimentIntensityAnalyzer()
+
+df["Review"][0:10].apply(lambda x: sia.polarity_scores(x))
+
+df["Review"][0:10].apply(lambda x: sia.polarity_scores(x)["compound"])
+
+df["Review"][0:10].apply(lambda x: "pos" if sia.polarity_scores(x)["compound"] > 0 else "neg")
+
+df["sentiment_label"] = df["Review"].apply(lambda x: "pos" if sia.polarity_scores(x)["compound"] > 0 else "neg")
