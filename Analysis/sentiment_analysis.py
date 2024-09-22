@@ -17,6 +17,8 @@ from sklearn.preprocessing import LabelEncoder
 from textblob import Word, TextBlob
 from wordcloud import WordCloud
 import nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import cross_val_score, GridSearchCV, cross_validate,train_test_split
 
 filterwarnings('ignore')
 pd.set_option('display.max_columns', None)
@@ -136,3 +138,20 @@ df["Review"][0:10].apply(lambda x: sia.polarity_scores(x)["compound"])
 df["Review"][0:10].apply(lambda x: "pos" if sia.polarity_scores(x)["compound"] > 0 else "neg")
 
 df["sentiment_label"] = df["Review"].apply(lambda x: "pos" if sia.polarity_scores(x)["compound"] > 0 else "neg")
+
+df["sentiment_label"] = LabelEncoder().fit_transform(df["sentiment_label"])
+
+##################################################
+# 4. ML Preparation
+##################################################
+
+y = df["sentiment_label"]
+X = df["Review"]
+
+tf_idf_word_vectorizer = TfidfVectorizer()
+X_tf_idf_word = tf_idf_word_vectorizer.fit_transform(X)
+
+X_train, X_test, y_train, y_test = train_test_split(X_tf_idf_word,
+                                                    y,
+                                                    test_size=0.20, random_state=17)
+
