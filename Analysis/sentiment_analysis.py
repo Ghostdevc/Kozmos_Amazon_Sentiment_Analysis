@@ -19,6 +19,7 @@ from wordcloud import WordCloud
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import cross_val_score, GridSearchCV, cross_validate,train_test_split
+from sklearn.metrics import classification_report
 
 filterwarnings('ignore')
 pd.set_option('display.max_columns', None)
@@ -154,4 +155,56 @@ X_tf_idf_word = tf_idf_word_vectorizer.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X_tf_idf_word,
                                                     y,
                                                     test_size=0.20, random_state=17)
+
+##################################################
+# 5. Sentiment Modeelling (Logistic Regression)
+##################################################
+
+logistic_model = LogisticRegression().fit(X_train, y_train)
+
+cross_val_score(logistic_model,
+                X_train,
+                y_train,
+                scoring="accuracy",
+                cv=5).mean()
+
+y_pred_log = logistic_model.predict(X_test)
+y_prob_log = logistic_model.predict_proba(X_test)[:, 1]
+
+print(classification_report(y_test, y_pred_log))
+
+##################################################
+# 6. Sentiment Modeelling (Random Forests)
+##################################################
+
+rf_model = RandomForestClassifier().fit(X_train, y_train)
+
+cross_val_score(rf_model,
+                X_train,
+                y_train,
+                scoring="accuracy",
+                cv=5, n_jobs=-1).mean()
+
+rf_params = {"max_depth": [8, None],
+             "max_features": [7, "auto"],
+             "min_samples_split": [2, 5, 8],
+             "n_estimators": [100, 200]}
+
+rf_best_grid = GridSearchCV(rf_model,
+                            rf_params,
+                            cv=5,
+                            n_jobs=-1,
+                            verbose=1).fit(X_train, y_train)
+
+rf_best_grid.best_params_
+
+rf_final = rf_model.set_params(**rf_best_grid.best_params_, random_state=17).fit(X_train, y_train)
+
+
+cross_val_score(rf_final, X_train, y_train, cv=5, n_jobs=-1).mean()
+
+y_pred_rf = rf_final.predict(X_test)
+y_prob_rf = rf_final.predict_proba(X_test)[:, 1]
+
+print(classification_report(y_test, y_pred_rf))
 
